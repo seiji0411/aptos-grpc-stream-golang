@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -19,7 +20,7 @@ var maxMsgSz = 30000000
 var target = "grpc.mainnet.aptoslabs.com:443"
 var data = "{ \"starting_version\": 1044414248 }"
 var symbol = "aptos.indexer.v1.RawData/GetTransactions"
-var headers = []string{"authorization:Bearer aptoslabs_JAcBRSFCvNL_9PPj4k9jYWRSLDZyzDHqD9bKv9qWoMSmm"}
+var headers = []string{"authorization:Bearer <YOUR_APTOS_LABS_KEY>"}
 
 func fail(err error, msg string, args ...interface{}) {
 	if err != nil {
@@ -41,7 +42,23 @@ type CustomHandler struct {
 }
 
 func (_h *CustomHandler) Write(p []byte) (n int, err error) {
-	fmt.Printf("Transaction length: %s\n", p)
+	type Transactions struct {
+		Transactions []grpcurl.Transaction `json:"transactions"`
+		ChainId      uint                  `json:"chainId"`
+	}
+
+	var txns = Transactions{}
+	e := json.Unmarshal(p, &txns)
+	if e != nil {
+		fmt.Println("error:", e)
+	}
+
+	for _, txn := range txns.Transactions {
+		if txn.TxType == grpcurl.TRANSACTION_TYPE_USER && txn.Info.Success {
+			fmt.Printf("\n\n%+v\n\n", txn)
+		}
+	}
+
 	return len(p), nil
 }
 
