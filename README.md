@@ -1,2 +1,2 @@
 # aptos-grpc-stream-golang
-Aptos GRPC transaction stream simple example with Golang
+GRPC APTOS blockchain transaction stream simple example with Golang
